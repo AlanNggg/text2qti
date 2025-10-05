@@ -25,12 +25,10 @@ import shutil
 import subprocess
 import tempfile
 from typing import Dict, List, Optional, Set, Union
+
 from .config import Config
 from .err import Text2qtiError
 from .markdown import Image, Markdown
-
-
-
 
 # regex patterns for parsing quiz content
 start_patterns = {
@@ -246,7 +244,10 @@ class Question(object):
 
 
     def append_feedback(self, text: str):
-        if self.type is not None and not self.choices:
+        # Only raise error if type requires choices but none have been added yet
+        types_requiring_choices = ('multiple_choice_question', 'true_false_question', 
+                                   'multiple_answers_question', 'short_answer_question')
+        if self.type in types_requiring_choices and not self.choices:
             raise Text2qtiError('Question feedback must immediately follow the question')
         if not self.choices:
             if self.feedback_raw is not None:

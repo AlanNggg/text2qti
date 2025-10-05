@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem
+	xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/imsqti_v2p1.xsd"
+	identifier="text2qti_question_39d4f4c8aecfe86d14bd80bce35805c8c35c7208d18df39844e0cee1e1ba6de7"
+	title="Question"
+	adaptive="false"
+	timeDependent="false"
+>
+<responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"
+/>
+<outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"
+>
+<defaultValue>
+<value>0</value>
+</defaultValue>
+</outcomeDeclaration>
+<outcomeDeclaration identifier="FEEDBACK" cardinality="multiple" baseType="identifier"
+/>
+<itemBody>
+<choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="1">
+<prompt>&lt;p&gt;What is 2 + 2?&lt;/p&gt;</prompt>
+<simpleChoice identifier="text2qti_choice_0d861545d749c225b3da89f9380b531a805002611ac0f4dd252a1121ecd128f7">&lt;p&gt;4&lt;/p&gt;</simpleChoice>
+<simpleChoice identifier="text2qti_choice_e3d12da41717e4ab4a0af68a051e088cd370d5a8d165eaac3ca20fa9212cb6f4">&lt;p&gt;3&lt;/p&gt;</simpleChoice>
+<simpleChoice identifier="text2qti_choice_ea05705a15fc4f6394327f9ff6e14a56f901f35857af3ab0de42ef92f573ffd5">&lt;p&gt;5&lt;/p&gt;</simpleChoice>
+<simpleChoice identifier="text2qti_choice_fdeb964f2c232863c654b0eeaa56d1512f16ef027422f11d16f3fd091edbed8e">&lt;p&gt;22&lt;/p&gt;</simpleChoice>
+</choiceInteraction>
+</itemBody>
+<responseProcessing>
+<responseCondition>
+<responseIf>
+<match><variable identifier="RESPONSE"/><baseValue baseType="identifier">text2qti_choice_0d861545d749c225b3da89f9380b531a805002611ac0f4dd252a1121ecd128f7</baseValue></match>
+<setOutcomeValue identifier="SCORE">
+<baseValue baseType="float">1</baseValue>
+</setOutcomeValue>
+</responseIf>
+<responseElseIf>
+<match><variable identifier="RESPONSE"/><baseValue baseType="identifier">text2qti_choice_fdeb964f2c232863c654b0eeaa56d1512f16ef027422f11d16f3fd091edbed8e</baseValue></match>
+<setOutcomeValue identifier="FEEDBACK">
+<baseValue baseType="identifier">text2qti_choice_fdeb964f2c232863c654b0eeaa56d1512f16ef027422f11d16f3fd091edbed8e_fb</baseValue>
+</setOutcomeValue>
+</responseElseIf>
+</responseCondition>
+</responseProcessing>
+<modalFeedback outcomeIdentifier="FEEDBACK" identifier="text2qti_choice_fdeb964f2c232863c654b0eeaa56d1512f16ef027422f11d16f3fd091edbed8e_fb" showHide="show">
+&lt;p&gt;This is general feedback for the question.&lt;/p&gt;
+</modalFeedback>
+</assessmentItem>

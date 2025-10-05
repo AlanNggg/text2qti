@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem
+	xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/imsqti_v2p1.xsd"
+	identifier="text2qti_question_8d1bc3399caad22bb9a1cbd085952e0ff3efa71d9bb30ba9180cdaf2dfb19333"
+	title="Question"
+	adaptive="false"
+	timeDependent="false"
+>
+<responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"
+/>
+<outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"
+>
+<defaultValue>
+<value>0</value>
+</defaultValue>
+</outcomeDeclaration>
+<outcomeDeclaration identifier="FEEDBACK" cardinality="multiple" baseType="identifier"
+/>
+<itemBody>
+<extendedTextInteraction responseIdentifier="RESPONSE"
+ expectedLines="10"
+>
+<prompt>&lt;p&gt;Write a short essay about the benefits of QTI 2.1.&lt;/p&gt;</prompt>
+</extendedTextInteraction>
+</itemBody>
+<responseProcessing>
+<responseCondition>
+<responseIf>
+<variable identifier="RESPONSE"/>
+<setOutcomeValue identifier="FEEDBACK">
+<baseValue baseType="identifier">general_fb</baseValue>
+</setOutcomeValue>
+</responseIf>
+</responseCondition>
+</responseProcessing>
+<modalFeedback outcomeIdentifier="FEEDBACK" identifier="general_fb" showHide="show">
+&lt;p&gt;Good effort!&lt;/p&gt;
+</modalFeedback>
+</assessmentItem>

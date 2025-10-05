@@ -1,0 +1,563 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2020, Geoffrey M. Poore
+# All rights reserved.
+#
+# Licensed under the BSD 3-Clause License:
+# http://opensource.org/licenses/BSD-3-Clause
+#
+
+"""
+QTI 3.0 classes for generating assessment items.
+Based on IMS QTI 3.0 specification.
+"""
+
+from typing import List, Optional, Union
+
+
+def xml_escape(s: str) -> str:
+    """Basic XML escaping for attributes and text content."""
+    return (s.replace('&', '&amp;')
+             .replace('<', '&lt;')
+             .replace('>', '&gt;')
+             .replace('"', '&quot;')
+             .replace("'", '&apos;'))
+
+
+class AssessmentItem:
+    """QTI 3.0 qti-assessment-item - represents a single question/item."""
+    
+    def __init__(self, identifier: str, title: str, adaptive: bool = False, 
+                 time_dependent: bool = False, language: Optional[str] = None):
+        self.identifier = identifier
+        self.title = title
+        self.adaptive = adaptive
+        self.time_dependent = time_dependent
+        self.language = language
+        self.response_declarations: List[ResponseDeclaration] = []
+        self.outcome_declarations: List[OutcomeDeclaration] = []
+        self.item_body: Optional[ItemBody] = None
+        self.response_processing: Optional[ResponseProcessing] = None
+        self.modal_feedbacks: List[ModalFeedback] = []
+    
+    def add_response_declaration(self, identifier: str, cardinality: str, 
+                                base_type: str) -> 'ResponseDeclaration':
+        """Add a response declaration (declares what type of response is expected)."""
+        decl = ResponseDeclaration(identifier, cardinality, base_type)
+        self.response_declarations.append(decl)
+        return decl
+    
+    def add_outcome_declaration(self, identifier: str, cardinality: str, 
+                               base_type: str, default_value: Optional[str] = None) -> 'OutcomeDeclaration':
+        """Add an outcome declaration (declares outcome variables like SCORE)."""
+        decl = OutcomeDeclaration(identifier, cardinality, base_type, default_value)
+        self.outcome_declarations.append(decl)
+        return decl
+    
+    def set_item_body(self, item_body: 'ItemBody'):
+        """Set the item body (contains the question content and interactions)."""
+        self.item_body = item_body
+    
+    def set_response_processing(self, response_processing: 'ResponseProcessing'):
+        """Set response processing (scoring logic)."""
+        self.response_processing = response_processing
+    
+    def add_modal_feedback(self, feedback: 'ModalFeedback'):
+        """Add modal feedback (feedback shown to student)."""
+        self.modal_feedbacks.append(feedback)
+    
+    def to_xml(self) -> str:
+        """Generate QTI 3.0 XML for this assessment item."""
+        xml = []
+        xml.append('<?xml version="1.0" encoding="UTF-8"?>')
+        xml.append('<qti-assessment-item')
+        xml.append('\txmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"')
+        xml.append('\txmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
+        xml.append('\txsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0_v1p0.xsd"')
+        xml.append(f'\tidentifier="{xml_escape(self.identifier)}"')
+        xml.append(f'\ttitle="{xml_escape(self.title)}"')
+        xml.append(f'\tadaptive="{"true" if self.adaptive else "false"}"')
+        xml.append(f'\ttime-dependent="{"true" if self.time_dependent else "false"}"')
+        if self.language:
+            xml.append(f'\txml:lang="{xml_escape(self.language)}"')
+        xml.append('>')
+        
+        # Response declarations
+        for decl in self.response_declarations:
+            xml.append(decl.to_xml())
+        
+        # Outcome declarations
+        for decl in self.outcome_declarations:
+            xml.append(decl.to_xml())
+        
+        # Item body
+        if self.item_body:
+            xml.append(self.item_body.to_xml())
+        
+        # Response processing
+        if self.response_processing:
+            xml.append(self.response_processing.to_xml())
+        
+        # Modal feedback
+        for feedback in self.modal_feedbacks:
+            xml.append(feedback.to_xml())
+        
+        xml.append('</qti-assessment-item>')
+        return '\n'.join(xml)
+
+
+class ResponseDeclaration:
+    """Declares a response variable (what the student answers)."""
+    
+    def __init__(self, identifier: str, cardinality: str, base_type: str):
+        self.identifier = identifier
+        self.cardinality = cardinality  # 'single', 'multiple', 'ordered'
+        self.base_type = base_type      # 'identifier', 'string', 'float', 'integer', etc.
+        self.correct_response: Optional[List[str]] = None
+    
+    def set_correct_response(self, values: List[str]):
+        """Set the correct response value(s)."""
+        self.correct_response = values
+    
+    def to_xml(self) -> str:
+        xml = [f'<qti-response-declaration identifier="{xml_escape(self.identifier)}" cardinality="{self.cardinality}" base-type="{self.base_type}"']
+        if self.correct_response:
+            xml.append('>')
+            xml.append('<qti-correct-response>')
+            for value in self.correct_response:
+                xml.append(f'<qti-value>{xml_escape(value)}</qti-value>')
+            xml.append('</qti-correct-response>')
+            xml.append('</qti-response-declaration>')
+        else:
+            xml.append('/>')
+        return '\n'.join(xml)
+
+
+class OutcomeDeclaration:
+    """Declares an outcome variable (like SCORE, FEEDBACK)."""
+    
+    def __init__(self, identifier: str, cardinality: str, base_type: str, 
+                 default_value: Optional[str] = None):
+        self.identifier = identifier
+        self.cardinality = cardinality
+        self.base_type = base_type
+        self.default_value = default_value
+        self.interpretation: Optional[str] = None
+        self.normal_maximum: Optional[float] = None
+    
+    def to_xml(self) -> str:
+        xml = [f'<qti-outcome-declaration identifier="{xml_escape(self.identifier)}" cardinality="{self.cardinality}" base-type="{self.base_type}"']
+        if self.interpretation:
+            xml.append(f' interpretation="{xml_escape(self.interpretation)}"')
+        if self.normal_maximum is not None:
+            xml.append(f' normal-maximum="{self.normal_maximum}"')
+        
+        if self.default_value:
+            xml.append('>')
+            xml.append('<qti-default-value>')
+            xml.append(f'<qti-value>{xml_escape(self.default_value)}</qti-value>')
+            xml.append('</qti-default-value>')
+            xml.append('</qti-outcome-declaration>')
+        else:
+            xml.append('/>')
+        return '\n'.join(xml)
+
+
+class ItemBody:
+    """The main content area of an assessment item."""
+    
+    def __init__(self):
+        self.blocks: List[Union[str, 'Interaction']] = []
+    
+    def add_html(self, html: str):
+        """Add raw HTML content."""
+        self.blocks.append(html)
+    
+    def add_interaction(self, interaction: 'Interaction'):
+        """Add an interaction (question element)."""
+        self.blocks.append(interaction)
+    
+    def to_xml(self) -> str:
+        xml = ['<qti-item-body>']
+        for block in self.blocks:
+            if isinstance(block, str):
+                xml.append(block)
+            else:
+                xml.append(block.to_xml())
+        xml.append('</qti-item-body>')
+        return '\n'.join(xml)
+
+
+class Interaction:
+    """Base class for interactions."""
+    
+    def __init__(self, response_identifier: str):
+        self.response_identifier = response_identifier
+        self.prompt: Optional[str] = None
+    
+    def set_prompt(self, prompt: str):
+        """Set the prompt (question text)."""
+        self.prompt = prompt
+
+
+class ChoiceInteraction(Interaction):
+    """Multiple choice or true/false interaction."""
+    
+    def __init__(self, response_identifier: str, shuffle: bool = False, 
+                 max_choices: int = 1):
+        super().__init__(response_identifier)
+        self.shuffle = shuffle
+        self.max_choices = max_choices
+        self.choices: List['SimpleChoice'] = []
+    
+    def add_choice(self, identifier: str, content: str) -> 'SimpleChoice':
+        """Add a choice option."""
+        choice = SimpleChoice(identifier, content)
+        self.choices.append(choice)
+        return choice
+    
+    def to_xml(self) -> str:
+        xml = [f'<qti-choice-interaction response-identifier="{xml_escape(self.response_identifier)}" shuffle="{"true" if self.shuffle else "false"}" max-choices="{self.max_choices}">']
+        if self.prompt:
+            xml.append(f'<qti-prompt>{self.prompt}</qti-prompt>')
+        for choice in self.choices:
+            xml.append(choice.to_xml())
+        xml.append('</qti-choice-interaction>')
+        return '\n'.join(xml)
+
+
+class SimpleChoice:
+    """A single choice in a choice interaction."""
+    
+    def __init__(self, identifier: str, content: str, fixed: bool = False):
+        self.identifier = identifier
+        self.content = content
+        self.fixed = fixed
+    
+    def to_xml(self) -> str:
+        fixed_attr = ' fixed="true"' if self.fixed else ''
+        return f'<qti-simple-choice identifier="{xml_escape(self.identifier)}"{fixed_attr}>{self.content}</qti-simple-choice>'
+
+
+class TextEntryInteraction(Interaction):
+    """Text entry (fill-in-the-blank / short answer) interaction."""
+    
+    def __init__(self, response_identifier: str, expected_length: Optional[int] = None):
+        super().__init__(response_identifier)
+        self.expected_length = expected_length
+    
+    def to_xml(self) -> str:
+        attrs = f'response-identifier="{xml_escape(self.response_identifier)}"'
+        if self.expected_length:
+            attrs += f' expected-length="{self.expected_length}"'
+        return f'<qti-text-entry-interaction {attrs}/>'
+
+
+class ExtendedTextInteraction(Interaction):
+    """Extended text (essay) interaction."""
+    
+    def __init__(self, response_identifier: str, expected_lines: Optional[int] = None,
+                 expected_length: Optional[int] = None):
+        super().__init__(response_identifier)
+        self.expected_lines = expected_lines
+        self.expected_length = expected_length
+    
+    def to_xml(self) -> str:
+        xml = [f'<qti-extended-text-interaction response-identifier="{xml_escape(self.response_identifier)}"']
+        if self.expected_lines:
+            xml.append(f' expected-lines="{self.expected_lines}"')
+        if self.expected_length:
+            xml.append(f' expected-length="{self.expected_length}"')
+        
+        if self.prompt:
+            xml.append('>')
+            xml.append(f'<qti-prompt>{self.prompt}</qti-prompt>')
+            xml.append('</qti-extended-text-interaction>')
+        else:
+            xml.append('/>')
+        
+        return '\n'.join(xml)
+
+
+class UploadInteraction(Interaction):
+    """File upload interaction."""
+    
+    def __init__(self, response_identifier: str):
+        super().__init__(response_identifier)
+    
+    def to_xml(self) -> str:
+        xml = [f'<qti-upload-interaction response-identifier="{xml_escape(self.response_identifier)}"']
+        
+        if self.prompt:
+            xml.append('>')
+            xml.append(f'<qti-prompt>{self.prompt}</qti-prompt>')
+            xml.append('</qti-upload-interaction>')
+        else:
+            xml.append('/>')
+        
+        return '\n'.join(xml)
+
+
+class ResponseProcessing:
+    """Response processing - defines how responses are scored."""
+    
+    def __init__(self):
+        self.rules: List['ResponseRule'] = []
+    
+    def add_rule(self, rule: 'ResponseRule'):
+        """Add a response rule."""
+        self.rules.append(rule)
+    
+    def to_xml(self) -> str:
+        xml = ['<qti-response-processing>']
+        for rule in self.rules:
+            xml.append(rule.to_xml())
+        xml.append('</qti-response-processing>')
+        return '\n'.join(xml)
+
+
+class ResponseRule:
+    """Base class for response rules."""
+    
+    def to_xml(self) -> str:
+        return ''
+
+
+class ResponseCondition(ResponseRule):
+    """Conditional response processing rule."""
+    
+    def __init__(self):
+        self.response_if: Optional['ResponseIf'] = None
+        self.response_else_ifs: List['ResponseElseIf'] = []
+        self.response_else: Optional['ResponseElse'] = None
+    
+    def set_response_if(self, response_if: 'ResponseIf'):
+        self.response_if = response_if
+    
+    def add_response_else_if(self, response_else_if: 'ResponseElseIf'):
+        self.response_else_ifs.append(response_else_if)
+    
+    def set_response_else(self, response_else: 'ResponseElse'):
+        self.response_else = response_else
+    
+    def to_xml(self) -> str:
+        xml = ['<qti-response-condition>']
+        if self.response_if:
+            xml.append(self.response_if.to_xml())
+        for else_if in self.response_else_ifs:
+            xml.append(else_if.to_xml())
+        if self.response_else:
+            xml.append(self.response_else.to_xml())
+        xml.append('</qti-response-condition>')
+        return '\n'.join(xml)
+
+
+class ResponseIf:
+    """The 'if' part of a response condition."""
+    
+    def __init__(self, condition: 'Expression', actions: List['ResponseRule']):
+        self.condition = condition
+        self.actions = actions
+    
+    def to_xml(self) -> str:
+        xml = ['<qti-response-if>']
+        xml.append(self.condition.to_xml())
+        for action in self.actions:
+            xml.append(action.to_xml())
+        xml.append('</qti-response-if>')
+        return '\n'.join(xml)
+
+
+class ResponseElseIf:
+    """The 'else if' part of a response condition."""
+    
+    def __init__(self, condition: 'Expression', actions: List['ResponseRule']):
+        self.condition = condition
+        self.actions = actions
+    
+    def to_xml(self) -> str:
+        xml = ['<qti-response-else-if>']
+        xml.append(self.condition.to_xml())
+        for action in self.actions:
+            xml.append(action.to_xml())
+        xml.append('</qti-response-else-if>')
+        return '\n'.join(xml)
+
+
+class ResponseElse:
+    """The 'else' part of a response condition."""
+    
+    def __init__(self, actions: List['ResponseRule']):
+        self.actions = actions
+    
+    def to_xml(self) -> str:
+        xml = ['<qti-response-else>']
+        for action in self.actions:
+            xml.append(action.to_xml())
+        xml.append('</qti-response-else>')
+        return '\n'.join(xml)
+
+
+class SetOutcomeValue(ResponseRule):
+    """Sets the value of an outcome variable."""
+    
+    def __init__(self, identifier: str, expression: 'Expression'):
+        self.identifier = identifier
+        self.expression = expression
+    
+    def to_xml(self) -> str:
+        xml = [f'<qti-set-outcome-value identifier="{xml_escape(self.identifier)}">']
+        xml.append(self.expression.to_xml())
+        xml.append('</qti-set-outcome-value>')
+        return '\n'.join(xml)
+
+
+class Expression:
+    """Base class for expressions."""
+    
+    def to_xml(self) -> str:
+        return ''
+
+
+class Match(Expression):
+    """Match expression - checks if two values are equal."""
+    
+    def __init__(self, left: Expression, right: Expression):
+        self.left = left
+        self.right = right
+    
+    def to_xml(self) -> str:
+        return f'<qti-match>{self.left.to_xml()}{self.right.to_xml()}</qti-match>'
+
+
+class Variable(Expression):
+    """Variable reference expression."""
+    
+    def __init__(self, identifier: str):
+        self.identifier = identifier
+    
+    def to_xml(self) -> str:
+        return f'<qti-variable identifier="{xml_escape(self.identifier)}"/>'
+
+
+class BaseValue(Expression):
+    """Literal value expression."""
+    
+    def __init__(self, base_type: str, value: str):
+        self.base_type = base_type
+        self.value = value
+    
+    def to_xml(self) -> str:
+        return f'<qti-base-value base-type="{self.base_type}">{xml_escape(self.value)}</qti-base-value>'
+
+
+class Multiple(Expression):
+    """Multiple expression - creates a container with multiple values."""
+    
+    def __init__(self, values: List[Expression]):
+        self.values = values
+    
+    def to_xml(self) -> str:
+        xml = ['<qti-multiple>']
+        for value in self.values:
+            xml.append(value.to_xml())
+        xml.append('</qti-multiple>')
+        return '\n'.join(xml)
+
+
+class And(Expression):
+    """AND logical operator."""
+    
+    def __init__(self, expressions: List[Expression]):
+        self.expressions = expressions
+    
+    def to_xml(self) -> str:
+        xml = ['<qti-and>']
+        for expr in self.expressions:
+            xml.append(expr.to_xml())
+        xml.append('</qti-and>')
+        return '\n'.join(xml)
+
+
+class Or(Expression):
+    """OR logical operator."""
+    
+    def __init__(self, expressions: List[Expression]):
+        self.expressions = expressions
+    
+    def to_xml(self) -> str:
+        xml = ['<qti-or>']
+        for expr in self.expressions:
+            xml.append(expr.to_xml())
+        xml.append('</qti-or>')
+        return '\n'.join(xml)
+
+
+class Not(Expression):
+    """NOT logical operator."""
+    
+    def __init__(self, expression: Expression):
+        self.expression = expression
+    
+    def to_xml(self) -> str:
+        return f'<qti-not>{self.expression.to_xml()}</qti-not>'
+
+
+class Sum(Expression):
+    """Sum expression - adds values together."""
+    
+    def __init__(self, expressions: List[Expression]):
+        self.expressions = expressions
+    
+    def to_xml(self) -> str:
+        xml = ['<qti-sum>']
+        for expr in self.expressions:
+            xml.append(expr.to_xml())
+        xml.append('</qti-sum>')
+        return '\n'.join(xml)
+
+
+class Gte(Expression):
+    """Greater than or equal expression."""
+    
+    def __init__(self, left: Expression, right: Expression):
+        self.left = left
+        self.right = right
+    
+    def to_xml(self) -> str:
+        return f'<qti-gte>{self.left.to_xml()}{self.right.to_xml()}</qti-gte>'
+
+
+class Lte(Expression):
+    """Less than or equal expression."""
+    
+    def __init__(self, left: Expression, right: Expression):
+        self.left = left
+        self.right = right
+    
+    def to_xml(self) -> str:
+        return f'<qti-lte>{self.left.to_xml()}{self.right.to_xml()}</qti-lte>'
+
+
+class ModalFeedback:
+    """Modal feedback shown to the student."""
+    
+    def __init__(self, identifier: str, outcome_identifier: str = 'FEEDBACK', 
+                 show_hide: str = 'show'):
+        self.identifier = identifier
+        self.outcome_identifier = outcome_identifier
+        self.show_hide = show_hide  # 'show' or 'hide'
+        self.content: str = ''
+    
+    def set_content(self, content: str):
+        """Set the feedback content (HTML)."""
+        self.content = content
+    
+    def to_xml(self) -> str:
+        # QTI 3.0: modalFeedback content must be wrapped in qti-content-body
+        xml = [f'<qti-modal-feedback outcome-identifier="{xml_escape(self.outcome_identifier)}" identifier="{xml_escape(self.identifier)}" show-hide="{self.show_hide}">']
+        xml.append('<qti-content-body>')
+        xml.append(self.content)
+        xml.append('</qti-content-body>')
+        xml.append('</qti-modal-feedback>')
+        return '\n'.join(xml)

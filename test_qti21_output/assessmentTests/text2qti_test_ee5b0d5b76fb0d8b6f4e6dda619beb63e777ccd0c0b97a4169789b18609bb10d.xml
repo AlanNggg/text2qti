@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assessmentTest identifier="text2qti_test_ee5b0d5b76fb0d8b6f4e6dda619beb63e777ccd0c0b97a4169789b18609bb10d" title="Sample QTI 2.1 Quiz"
+    xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/imsqti_v2p1.xsd">
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float">
+    <defaultValue>
+      <value>0.0</value>
+    </defaultValue>
+  </outcomeDeclaration>
+  <testPart identifier="testPart1" navigationMode="linear" submissionMode="individual">
+    <itemSessionControl maxAttempts="1" showFeedback="true" showSolution="false" allowComment="false" allowSkipping="true" validateResponses="false"/>
+    <assessmentSection identifier="main_section" title="Questions" visible="true">
+      <assessmentItemRef identifier="text2qti_question_39d4f4c8aecfe86d14bd80bce35805c8c35c7208d18df39844e0cee1e1ba6de7" href="../assessmentItems/text2qti_question_39d4f4c8aecfe86d14bd80bce35805c8c35c7208d18df39844e0cee1e1ba6de7.xml"/>
+      <assessmentItemRef identifier="text2qti_question_05cad7edd9fc559a952ba6a5d86958b55b63341bcc76a3d6e89f5636cec9fca0" href="../assessmentItems/text2qti_question_05cad7edd9fc559a952ba6a5d86958b55b63341bcc76a3d6e89f5636cec9fca0.xml"/>
+      <assessmentItemRef identifier="text2qti_question_3f426f2b0e5213fb4234672f912db06de7f6e21fca879073e283d49fec620691" href="../assessmentItems/text2qti_question_3f426f2b0e5213fb4234672f912db06de7f6e21fca879073e283d49fec620691.xml"/>
+      <assessmentItemRef identifier="text2qti_question_8d1bc3399caad22bb9a1cbd085952e0ff3efa71d9bb30ba9180cdaf2dfb19333" href="../assessmentItems/text2qti_question_8d1bc3399caad22bb9a1cbd085952e0ff3efa71d9bb30ba9180cdaf2dfb19333.xml"/>
+      <assessmentItemRef identifier="text2qti_question_1e4c3ace73b4bfed298bc0c18d67f3eab6d32cd2424be0759fd94bd4780b31a9" href="../assessmentItems/text2qti_question_1e4c3ace73b4bfed298bc0c18d67f3eab6d32cd2424be0759fd94bd4780b31a9.xml"/>
+    </assessmentSection>
+  </testPart>
+</assessmentTest>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem
+	xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/imsqti_v2p1.xsd"
+	identifier="text2qti_question_05cad7edd9fc559a952ba6a5d86958b55b63341bcc76a3d6e89f5636cec9fca0"
+	title="Question"
+	adaptive="false"
+	timeDependent="false"
+>
+<responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="identifier"
+/>
+<outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"
+>
+<defaultValue>
+<value>0</value>
+</defaultValue>
+</outcomeDeclaration>
+<outcomeDeclaration identifier="FEEDBACK" cardinality="multiple" baseType="identifier"
+/>
+<itemBody>
+<choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="3">
+<prompt>&lt;p&gt;Which of the following are prime numbers? (Select all that apply)&lt;/p&gt;</prompt>
+<simpleChoice identifier="text2qti_choice_56e151095b5f172b4ac3ea18f38fbdf26d3eaa295b5463c98959d99baf92fc6e">&lt;p&gt;2&lt;/p&gt;</simpleChoice>
+<simpleChoice identifier="text2qti_choice_8e0f1d5b850dde8162ce5d83db05fd505831c3e65ea16fbc9aad97cbfaaf6894">&lt;p&gt;3&lt;/p&gt;</simpleChoice>
+<simpleChoice identifier="text2qti_choice_6ac07c23ccff7ea372313debf1ebed3dfcef5241d1323097485ed69497fc9946">&lt;p&gt;4&lt;/p&gt;</simpleChoice>
+<simpleChoice identifier="text2qti_choice_ce6c15cc0c1126b15c7b4c009be633b7d2720588bd2854cba791957a4f0692a3">&lt;p&gt;5&lt;/p&gt;</simpleChoice>
+<simpleChoice identifier="text2qti_choice_92e0c1b0877650f606182f65d80a584f62be1a1de00d3cf986258152905d0ea1">&lt;p&gt;6&lt;/p&gt;</simpleChoice>
+</choiceInteraction>
+</itemBody>
+<responseProcessing>
+<responseCondition>
+<responseIf>
+<and>
+<match><variable identifier="RESPONSE"/><baseValue baseType="identifier">text2qti_choice_56e151095b5f172b4ac3ea18f38fbdf26d3eaa295b5463c98959d99baf92fc6e</baseValue></match>
+<match><variable identifier="RESPONSE"/><baseValue baseType="identifier">text2qti_choice_8e0f1d5b850dde8162ce5d83db05fd505831c3e65ea16fbc9aad97cbfaaf6894</baseValue></match>
+<not><match><variable identifier="RESPONSE"/><baseValue baseType="identifier">text2qti_choice_6ac07c23ccff7ea372313debf1ebed3dfcef5241d1323097485ed69497fc9946</baseValue></match></not>
+<match><variable identifier="RESPONSE"/><baseValue baseType="identifier">text2qti_choice_ce6c15cc0c1126b15c7b4c009be633b7d2720588bd2854cba791957a4f0692a3</baseValue></match>
+<not><match><variable identifier="RESPONSE"/><baseValue baseType="identifier">text2qti_choice_92e0c1b0877650f606182f65d80a584f62be1a1de00d3cf986258152905d0ea1</baseValue></match></not>
+</and>
+<setOutcomeValue identifier="SCORE">
+<baseValue baseType="float">1</baseValue>
+</setOutcomeValue>
+</responseIf>
+</responseCondition>
+</responseProcessing>
+</assessmentItem>

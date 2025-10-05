@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem
+	xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/imsqti_v2p1.xsd"
+	identifier="text2qti_question_3f426f2b0e5213fb4234672f912db06de7f6e21fca879073e283d49fec620691"
+	title="Question"
+	adaptive="false"
+	timeDependent="false"
+>
+<responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"
+/>
+<outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"
+>
+<defaultValue>
+<value>0</value>
+</defaultValue>
+</outcomeDeclaration>
+<outcomeDeclaration identifier="FEEDBACK" cardinality="multiple" baseType="identifier"
+/>
+<itemBody>
+<div class="qti-question">&lt;p&gt;What is the capital of France?&lt;/p&gt;</div>
+<textEntryInteraction responseIdentifier="RESPONSE" expectedLength="20"/>
+</itemBody>
+<responseProcessing>
+<responseCondition>
+<responseIf>
+<match><variable identifier="RESPONSE"/><baseValue baseType="string">Paris</baseValue></match>
+<setOutcomeValue identifier="SCORE">
+<baseValue baseType="float">1</baseValue>
+</setOutcomeValue>
+</responseIf>
+<responseElseIf>
+<match><variable identifier="RESPONSE"/><baseValue baseType="string">paris</baseValue></match>
+<setOutcomeValue identifier="SCORE">
+<baseValue baseType="float">1</baseValue>
+</setOutcomeValue>
+</responseElseIf>
+</responseCondition>
+</responseProcessing>
+</assessmentItem>

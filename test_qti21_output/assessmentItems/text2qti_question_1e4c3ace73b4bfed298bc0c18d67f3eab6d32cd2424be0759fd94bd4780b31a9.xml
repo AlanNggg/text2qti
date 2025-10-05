@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem
+	xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/imsqti_v2p1.xsd"
+	identifier="text2qti_question_1e4c3ace73b4bfed298bc0c18d67f3eab6d32cd2424be0759fd94bd4780b31a9"
+	title="Question"
+	adaptive="false"
+	timeDependent="false"
+>
+<responseDeclaration identifier="RESPONSE" cardinality="single" baseType="float"
+/>
+<outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"
+>
+<defaultValue>
+<value>0</value>
+</defaultValue>
+</outcomeDeclaration>
+<outcomeDeclaration identifier="FEEDBACK" cardinality="multiple" baseType="identifier"
+/>
+<itemBody>
+<div class="qti-question">&lt;p&gt;What is the value of pi (approximately)?&lt;/p&gt;</div>
+<textEntryInteraction responseIdentifier="RESPONSE" expectedLength="10"/>
+</itemBody>
+<responseProcessing>
+<responseCondition>
+<responseIf>
+<and>
+<gte><variable identifier="RESPONSE"/><baseValue baseType="float">3.1300000000000003</baseValue></gte>
+<lte><variable identifier="RESPONSE"/><baseValue baseType="float">3.15</baseValue></lte>
+</and>
+<setOutcomeValue identifier="SCORE">
+<baseValue baseType="float">1</baseValue>
+</setOutcomeValue>
+</responseIf>
+</responseCondition>
+</responseProcessing>
+</assessmentItem>

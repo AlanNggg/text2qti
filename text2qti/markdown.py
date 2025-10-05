@@ -17,28 +17,27 @@ import re
 import subprocess
 import time
 import typing
-from typing import Dict, Optional, Set
 import urllib.parse
 import zipfile
+from typing import Dict, Optional, Set
 
 import markdown
 # Markdown extensions are imported and initialized explicitly to ensure that
 # pyinstaller identifies them.
 import markdown.extensions
-import markdown.extensions.smarty
-import markdown.extensions.sane_lists
 import markdown.extensions.def_list
 import markdown.extensions.fenced_code
 import markdown.extensions.footnotes
-import markdown.extensions.tables
 import markdown.extensions.md_in_html
-from markdown.inlinepatterns import ImageInlineProcessor, IMAGE_LINK_RE
+import markdown.extensions.sane_lists
+import markdown.extensions.smarty
+import markdown.extensions.tables
+from markdown.inlinepatterns import IMAGE_LINK_RE, ImageInlineProcessor
 
+from . import pymd_pandoc_attr
 from .config import Config
 from .err import Text2qtiError
 from .version import __version__ as version
-from . import pymd_pandoc_attr
-
 
 md_extensions = [
     markdown.extensions.smarty.makeExtension(),
@@ -506,7 +505,7 @@ class Markdown(object):
         '''
         return self.skip_or_html_comment_or_code_math_siunitx_re.sub(self._html_comment_or_inline_code_math_siunitx_dispatch, string)
 
-    def md_to_html_xml(self, markdown_string: str, strip_p_tags: bool=False) -> str:
+    def md_to_html_xml(self, markdown_string: str, strip_p_tags: bool=True) -> str:
         '''
         Convert the Markdown in a string to HTML, then escape the HTML for
         embedding in XML.
