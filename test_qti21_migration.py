@@ -11,9 +11,9 @@ import os
 import sys
 
 # Add text2qti to path
-sys.path.insert(0, os.path.dirname(__file__))
-
-from text2qti import QTI, Config, Quiz
+from text2qti.config import Config  
+from text2qti.quiz import Quiz  
+from text2qti.qti import QTI
 
 # Example quiz content
 quiz_text = """
