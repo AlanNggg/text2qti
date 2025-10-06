@@ -12,7 +12,7 @@ Generate QTI 2.1 assessment items from Quiz objects.
 """
 
 from .qti21 import (And, AssessmentItem, BaseValue, ChoiceInteraction,
-                    ExtendedTextInteraction, Gte, ItemBody, Lte, Match,
+                    ExtendedTextInteraction, GapMatchInteraction, Gte, ItemBody, Lte, Match,
                     ModalFeedback, Multiple, Not, ResponseCondition,
                     ResponseElse, ResponseElseIf, ResponseIf,
                     ResponseProcessing, SetOutcomeValue, TextEntryInteraction,
@@ -43,6 +43,11 @@ def create_assessment_item_from_question(question: Question) -> AssessmentItem:
         item.add_response_declaration('RESPONSE', 'single', 'string')
     elif question.type == 'file_upload_question':
         item.add_response_declaration('RESPONSE', 'single', 'file')
+    elif question.type == 'gap_match_question':
+        response_decl = item.add_response_declaration('RESPONSE', 'multiple', 'directedPair')
+        # Set correct response from gap_matches
+        correct_values = [f"{m['gap_text_id']} {m['gap_id']}" for m in question.gap_matches]
+        response_decl.set_correct_response(correct_values)
     
     # Add outcome declarations
     item.add_outcome_declaration('SCORE', 'single', 'float', default_value='0')
@@ -72,6 +77,9 @@ def create_assessment_item_from_question(question: Question) -> AssessmentItem:
     elif question.type == 'file_upload_question':
         # File upload - just show question text
         item_body.add_html(question.question_html_xml)
+    elif question.type == 'gap_match_question':
+        interaction = create_gap_match_interaction(question)
+        item_body.add_interaction(interaction)
     
     item.set_item_body(item_body)
     
@@ -100,6 +108,22 @@ def create_choice_interaction(question: Question) -> ChoiceInteraction:
     
     for choice in question.choices:
         interaction.add_choice(f'text2qti_choice_{choice.id}', choice.choice_html_xml)
+    
+    return interaction
+
+
+def create_gap_match_interaction(question: Question) -> GapMatchInteraction:
+    """Create a gap match interaction for drag-and-drop fill-in-the-blank questions."""
+    shuffle = False  # Could be made configurable
+    
+    interaction = GapMatchInteraction('RESPONSE', shuffle=shuffle)
+    
+    # Add gap texts (draggable options)
+    for gap_text in question.gap_texts:
+        interaction.add_gap_text(gap_text['identifier'], gap_text['text'], match_max=1)
+    
+    # Set content with gaps - convert {gap_id} to proper gap elements
+    interaction.set_content_with_gaps(question.question_html_xml)
     
     return interaction
 
@@ -345,6 +369,55 @@ def create_response_processing(question: Question) -> ResponseProcessing:
                 Variable('RESPONSE'),  # This evaluates to true if response exists
                 actions
             ))
+            rp.add_rule(rc)
+    
+    elif question.type == 'gap_match_question':
+        # Gap match - check if all correct pairs are matched
+        rc = ResponseCondition()
+        
+        # Build AND condition: all correct matches present
+        conditions = []
+        for match in question.gap_matches:
+            # Check if this directed pair exists in the response
+            conditions.append(Match(
+                Variable('RESPONSE'),
+                BaseValue('directedPair', f"{match['gap_text_id']} {match['gap_id']}")
+            ))
+        
+        if len(conditions) > 1:
+            all_correct = And(conditions)
+        else:
+            all_correct = conditions[0] if conditions else None
+        
+        if all_correct:
+            actions_correct = [
+                SetOutcomeValue('SCORE', BaseValue('float', str(question.points_possible)))
+            ]
+            
+            if question.correct_feedback_raw:
+                actions_correct.append(
+                    SetOutcomeValue('FEEDBACK', BaseValue('identifier', 'correct_fb'))
+                )
+            if question.feedback_raw:
+                actions_correct.append(
+                    SetOutcomeValue('FEEDBACK', BaseValue('identifier', 'general_fb'))
+                )
+            
+            rc.set_response_if(ResponseIf(all_correct, actions_correct))
+            
+            # Else (incorrect)
+            if question.incorrect_feedback_raw or question.feedback_raw:
+                actions_incorrect = []
+                if question.incorrect_feedback_raw:
+                    actions_incorrect.append(
+                        SetOutcomeValue('FEEDBACK', BaseValue('identifier', 'incorrect_fb'))
+                    )
+                if question.feedback_raw:
+                    actions_incorrect.append(
+                        SetOutcomeValue('FEEDBACK', BaseValue('identifier', 'general_fb'))
+                    )
+                rc.set_response_else(ResponseElse(actions_incorrect))
+            
             rp.add_rule(rc)
     
     return rp

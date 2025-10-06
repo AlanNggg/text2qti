@@ -298,6 +298,59 @@ class UploadInteraction(Interaction):
         return '\n'.join(xml)
 
 
+class GapMatchInteraction(Interaction):
+    """Gap match interaction - drag and drop words into gaps."""
+    
+    def __init__(self, response_identifier: str, shuffle: bool = False):
+        super().__init__(response_identifier)
+        self.shuffle = shuffle
+        self.gap_texts: List['GapText'] = []
+        self.content_with_gaps: str = ""
+    
+    def add_gap_text(self, identifier: str, text: str, match_max: int = 1) -> 'GapText':
+        """Add a draggable gap text option."""
+        gap_text = GapText(identifier, text, match_max)
+        self.gap_texts.append(gap_text)
+        return gap_text
+    
+    def set_content_with_gaps(self, content: str):
+        """Set the content that contains {gap_id} placeholders."""
+        # Replace {gap_id} with proper QTI gap elements
+        import re
+        def replace_gap(match):
+            gap_id = match.group(1)
+            return f'<qti-gap identifier="{xml_escape(gap_id)}" />'
+        self.content_with_gaps = re.sub(r'\{([a-zA-Z0-9_]+)\}', replace_gap, content)
+    
+    def to_xml(self) -> str:
+        xml = [f'<qti-gap-match-interaction response-identifier="{xml_escape(self.response_identifier)}" shuffle="{"true" if self.shuffle else "false"}">']
+        if self.prompt:
+            xml.append(f'<qti-prompt>{self.prompt}</qti-prompt>')
+        
+        # Add gap texts (draggable options)
+        for gap_text in self.gap_texts:
+            xml.append(gap_text.to_xml())
+        
+        # Add content with gaps
+        if self.content_with_gaps:
+            xml.append(self.content_with_gaps)
+        
+        xml.append('</qti-gap-match-interaction>')
+        return '\n'.join(xml)
+
+
+class GapText:
+    """A draggable text option for gap match interaction."""
+    
+    def __init__(self, identifier: str, text: str, match_max: int = 1):
+        self.identifier = identifier
+        self.text = text
+        self.match_max = match_max
+    
+    def to_xml(self) -> str:
+        return f'<qti-gap-text identifier="{xml_escape(self.identifier)}" match-max="{self.match_max}">{xml_escape(self.text)}</qti-gap-text>'
+
+
 class ResponseProcessing:
     """Response processing - defines how responses are scored."""
     

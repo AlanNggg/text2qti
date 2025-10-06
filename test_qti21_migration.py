@@ -16,41 +16,95 @@ from text2qti.quiz import Quiz
 from text2qti.qti import QTI
 
 # Example quiz content
-quiz_text = """
-Quiz title: Sample QTI 2.1 Quiz
-Quiz description: This quiz demonstrates the new QTI 2.1 format.
+quiz_text = r"""
+Quiz title: Complete Question Type Examples  
+Quiz description: This quiz demonstrates all seven question types.  
+  
+Title: Multiple Choice Example  
+Points: 1  
+1.  What is 2+3?  
+... General question feedback.  
++   Feedback for correct answer.  
+-   Feedback for incorrect answer.  
+a)  6  
+... Feedback for this particular answer.  
+b)  1  
+*c) 5  
+  
+Title: True/False Example  
+Points: 1  
+2.  The Earth is round.  
+*a) True  
+b)  False  
+  
+Title: Multiple Answers Example  
+Points: 2  
+3.  Which of the following are dinosaurs?  
+[ ] Woolly mammoth  
+[*] Tyrannosaurus rex  
+[*] Triceratops  
+[ ] Smilodon fatalis  
+  
+Title: Numerical Example (Range)  
+Points: 1  
+4.  What is the square root of 2?  
+=   1.4142 +- 0.0001  
+  
+Title: Numerical Example (Exact)  
+Points: 1  
+5.  What is 10 divided by 2?  
+=   5  
+  
+Title: Short Answer Example  
+Points: 1  
+6.  Who lives at the North Pole?  
+*   Santa  
+*   Santa Claus  
+*   Father Christmas  
+*   Saint Nicholas  
+*   Saint Nick  
+  
+Title: Essay Example  
+Points: 5  
+7.  Write an essay.  
+... General question feedback.  
+____  
+  
+Title: File Upload Example  
+Points: 5  
+8.  Upload a file.  
+... General question feedback.  
+^^^^  
 
-1. What is 2 + 2?
+Title: Shakespeare Quote - Richard III
+Points: 3
+9. Identify the missing words in this famous quote from Shakespeare's Richard III. Now is the {G1} of our discontent. Made glorious {G2} by this sun of York.
+@gap W) winter
+@gap Sp) spring
+@gap Su) summer
+@gap A) autumn
+@match W G1
+@match Su G2
 
-*a) 4
-b) 3
-c) 5
-d) 22
+Title: Simple Fill-in-the-Blank
+Points: 2
+10. Fill in the blanks with the correct words. The {GAP1} is the capital of {GAP2}.
+@gap L) London
+@gap P) Paris
+@gap UK) United Kingdom
+@gap FR) France
+@match L GAP1
+@match UK GAP2
 
-... This is general feedback for the question.
-
-2. Which of the following are prime numbers? (Select all that apply)
-
-[*] 2
-[*] 3
-[ ] 4
-[*] 5
-[ ] 6
-
-3. What is the capital of France?
-
-* Paris
-* paris
-
-4. Write a short essay about the benefits of QTI 2.1.
-
-___
-
-... Good effort!
-
-5. What is the value of pi (approximately)?
-
-= 3.14 +- 0.01
+Title: Science Question
+Points: 2
+11. Complete the sentence with the correct scientific terms. Water is composed of {ELEMENT1} and {ELEMENT2} atoms.
+@gap H) hydrogen
+@gap O) oxygen
+@gap C) carbon
+@gap N) nitrogen
+@match H ELEMENT1
+@match O ELEMENT2
 """
 
 

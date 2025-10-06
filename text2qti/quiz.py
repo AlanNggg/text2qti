@@ -38,6 +38,8 @@ start_patterns = {
     'multans_correct_choice': r'\[\*\]',
     'multans_incorrect_choice': r'\[ ?\]',
     'shortans_correct_choice': r'\*',
+    'gap_text': r'@gap',
+    'gap_match': r'@match',
     'feedback': r'\.\.\.',
     'correct_feedback': r'\+',
     'incorrect_feedback': r'\-',
@@ -76,7 +78,7 @@ comment_patterns = {
 no_content = set(['essay', 'upload', 'start_group', 'end_group', 'start_code', 'end_code'])
 # whether parser needs to check for multi-line content
 single_line = set(['question_points', 'group_pick', 'group_solutions_pick', 'group_points_per_question',
-                   'numerical', 'shortans_correct_choice',
+                   'numerical', 'shortans_correct_choice', 'gap_text', 'gap_match',
                    'quiz_shuffle_answers', 'quiz_show_correct_answers',
                    'quiz_one_question_at_a_time', 'quiz_cant_go_back',
                    'quiz_feedback_is_solution', 'quiz_solutions_sample_groups', 'quiz_solutions_randomize_groups'])
@@ -213,6 +215,10 @@ class Question(object):
         self.numerical_exact_html_xml: Optional[str] = None
         self.numerical_max: Optional[Union[int, float]] = None
         self.numerical_max_html_xml: Optional[str] = None
+        # Gap match question support
+        self.gap_texts: List[Dict[str, str]] = []  # List of {identifier, text}
+        self.gap_matches: List[Dict[str, str]] = []  # List of {gap_text_id, gap_id}
+        self._gap_text_ids: Set[str] = set()
         self.correct_choices = 0
         if points is None:
             self.points_possible_raw: Optional[str] = None
@@ -368,6 +374,45 @@ class Question(object):
         if any(x is not None for x in (self.correct_feedback_raw, self.incorrect_feedback_raw)):
             raise Text2qtiError(f'Question type "{self.type}" does not support correct/incorrect feedback')
 
+    def append_gap_text(self, text: str):
+        if self.type is None:
+            self.type = 'gap_match_question'
+        elif self.type != 'gap_match_question':
+            raise Text2qtiError(f'Question type "{self.type}" does not support gap match')
+        # Parse format: @gap <identifier>) <text>
+        # Example: @gap W) winter
+        match = re.match(r'^([a-zA-Z0-9_]+)\)\s*(.+)$', text.strip())
+        if not match:
+            raise Text2qtiError('Invalid gap text format; need "@gap <id>) <text>", e.g., "@gap W) winter"')
+        identifier, gap_text = match.groups()
+        if identifier in self._gap_text_ids:
+            raise Text2qtiError(f'Duplicate gap text identifier "{identifier}"')
+        self._gap_text_ids.add(identifier)
+        self.gap_texts.append({
+            'identifier': identifier,
+            'text': gap_text.strip(),
+            'text_html_xml': self.md.md_to_html_xml(gap_text.strip())
+        })
+
+    def append_gap_match(self, text: str):
+        if self.type is None:
+            raise Text2qtiError('Gap matches must be specified after gap texts')
+        if self.type != 'gap_match_question':
+            raise Text2qtiError(f'Question type "{self.type}" does not support gap match')
+        # Parse format: @match <gap_text_id> <gap_id>
+        # Example: @match W G1
+        match = re.match(r'^([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_]+)$', text.strip())
+        if not match:
+            raise Text2qtiError('Invalid gap match format; need "@match <gap_text_id> <gap_id>", e.g., "@match W G1"')
+        gap_text_id, gap_id = match.groups()
+        if gap_text_id not in self._gap_text_ids:
+            raise Text2qtiError(f'Unknown gap text identifier "{gap_text_id}"; must be defined with @gap first')
+        self.gap_matches.append({
+            'gap_text_id': gap_text_id,
+            'gap_id': gap_id
+        })
+        self.correct_choices += 1
+
     def append_numerical(self, text: str):
         if self.type is not None:
             if self.type == 'numerical_question':
@@ -462,6 +507,17 @@ class Question(object):
                 raise Text2qtiError('Question must provide more than one choice')
             if self.correct_choices < 1:
                 raise Text2qtiError('Question must specify a correct choice')
+        elif self.type == 'gap_match_question':
+            if not self.gap_texts:
+                raise Text2qtiError('Gap match question must provide gap texts with @gap')
+            if not self.gap_matches:
+                raise Text2qtiError('Gap match question must provide matches with @match')
+            # Validate that all gap_ids in matches exist in the question text
+            gap_ids_in_question = re.findall(r'\{([a-zA-Z0-9_]+)\}', self.question_raw)
+            gap_ids_in_matches = set(m['gap_id'] for m in self.gap_matches)
+            for gap_id in gap_ids_in_matches:
+                if gap_id not in gap_ids_in_question:
+                    raise Text2qtiError(f'Gap ID "{gap_id}" in @match not found in question text. Use {{gap_id}} format.')
 
 
 
@@ -1116,6 +1172,26 @@ class Quiz(object):
         if not isinstance(last_question_or_delim, Question):
             raise Text2qtiError('Cannot have a numerical response without a question')
         last_question_or_delim.append_numerical(text)
+
+    def append_gap_text(self, text: str):
+        if self._next_question_attr:
+            raise Text2qtiError('Expected question; question title and/or points were set but not used')
+        if not self.questions_and_delims:
+            raise Text2qtiError('Cannot have a gap text without a question')
+        last_question_or_delim = self.questions_and_delims[-1]
+        if not isinstance(last_question_or_delim, Question):
+            raise Text2qtiError('Cannot have a gap text without a question')
+        last_question_or_delim.append_gap_text(text)
+
+    def append_gap_match(self, text: str):
+        if self._next_question_attr:
+            raise Text2qtiError('Expected question; question title and/or points were set but not used')
+        if not self.questions_and_delims:
+            raise Text2qtiError('Cannot have a gap match without a question')
+        last_question_or_delim = self.questions_and_delims[-1]
+        if not isinstance(last_question_or_delim, Question):
+            raise Text2qtiError('Cannot have a gap match without a question')
+        last_question_or_delim.append_gap_match(text)
 
     def append_start_group(self, text: str):
         if self._next_question_attr:
